@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
-
-var validarCPF = require('../public/javascripts/cpf-validator').validarCPF;
-
 const { body, validationResult } = require('express-validator');
+const db = require('../db');
+const validarCPF = require('../public/javascripts/cpf-validator').validarCPF;
 
 /**
  * GET /contato – exibe o formulário.
@@ -15,6 +14,38 @@ router.get('/', (req, res) => {
     data: {},
     errors: {}  });
 });
+
+// GET /contato/lista – tabela com os contatos cadastrados
+router.get('/lista', (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, nome, cpf, email, idade, genero, interesses, mensagem, criado_em
+    FROM contatos
+    ORDER BY criado_em DESC
+  `).all();
+
+  res.render('contatos-lista', {
+    title: 'Lista de Contatos',
+    contatos: rows
+  });
+});
+
+// POST /contato/:id/delete – exclui um contato pelo ID
+router.post('/:id/delete', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (Number.isNaN(id)) {
+    // ID inválido → só volta
+    return res.redirect('/contato/lista');
+  }
+
+  const info = db.prepare('DELETE FROM contatos WHERE id = ?').run(id);
+
+  // Opcional: você pode testar se algo foi deletado
+  if (info.changes === 0) { console.log('Nenhum registro com esse ID'); }
+
+  return res.redirect('/contato/lista');
+});
+
 
 /**
  * POST /contato – valida, sanitiza e decide: erro -> reexibir formulário; sucesso -> página de sucesso
@@ -78,20 +109,39 @@ router.post('/',
     };
 
     if (!errors.isEmpty()) {
-      // Mapeamos erros por campo para facilitar no EJS
-      const mapped = errors.mapped(); // { campo: { msg, param, ... } }
+      const mapped = errors.mapped();
       return res.status(400).render('contato', {
         title: 'Formulário de Contato',
         data,
         errors: mapped
       });
     }
+
+    const stmt = db.prepare(`
+      INSERT INTO contatos (nome, cpf, email, idade, genero, interesses, mensagem, aceite)
+      VALUES (@nome, @cpf, @email, @idade, @genero, @interesses, @mensagem, @aceite)
+    `);    
     // Aqui você poderia persistir no banco, enviar e-mail, etc.
+
+    stmt.run({
+      nome: data.nome,
+      cpf: data.cpf,
+      email: data.email,
+      idade: data.idade || null,
+      genero: data.genero || null,
+      interesses: Array.isArray(data.interesses)
+        ? data.interesses.join(',')
+        : (data.interesses || ''),
+      mensagem: data.mensagem,
+      aceite: data.aceite ? 1 : 0
+    });
+    
 
     return res.render('sucesso', {
       title: 'Enviado com sucesso',
       data
     });
+    
   }
 );
 
