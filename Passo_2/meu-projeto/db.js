@@ -19,6 +19,7 @@ db.prepare(`
     email TEXT NOT NULL,
     idade INTEGER,
     genero TEXT,
+    ocupacao TEXT,
     interesses TEXT,
     mensagem TEXT NOT NULL,
     aceite INTEGER NOT NULL,
@@ -26,15 +27,5 @@ db.prepare(`
   )
 `).run();
 
-// Adiciona a coluna CPF se ela não existir (para bancos antigos)
-try {
-  db.prepare('ALTER TABLE contatos ADD COLUMN cpf TEXT').run();
-  console.log('Coluna CPF adicionada à tabela contatos');
-} catch (err) {
-  // Coluna já existe, tudo bem
-  if (!err.message.includes('duplicate column name')) {
-    console.error('Erro ao adicionar coluna CPF:', err.message);
-  }
-}
 
 module.exports = db;

@@ -46,6 +46,7 @@
               <th>Idade</th>
               <th>Gênero</th>
               <th>Interesses</th>
+              <th>Ocupação</th>
               <th>Mensagem</th>
               <th>Criado em</th>
               <th>Ações</th>
@@ -67,12 +68,16 @@
                     -
                   <% } %>
                 </td>
+                <td><%= c.ocupacao || '-' %></td>
                 <td><%= c.mensagem %></td>
                 <td><%= c.criado_em %></td>
                 <td class="actions">
                   <form action="/contato/<%= c.id %>/delete" method="post"
                         onsubmit="return confirm('Tem certeza que deseja excluir o contato <%= c.nome %>?');">
                     <button type="submit">Excluir</button>
+                  </form>
+                  <form action="/contato/<%= c.id %>/editar" method="get" onsubmit="return confirm('Tem certeza que deseja editar o contato <%= c.nome %>?');">
+                    <button type="submit">Editar</button>
                   </form>
                 </td>
               </tr>
