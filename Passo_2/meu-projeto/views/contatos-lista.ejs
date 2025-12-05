@@ -62,8 +62,10 @@
                 <td><%= c.idade || '-' %></td>
                 <td><%= c.genero || '-' %></td>
                 <td>
-                  <% if (c.interesses) { %>
+                  <% if (c.interesses && typeof c.interesses === 'string') { %>
                     <%= c.interesses.split(',').join(', ') %>
+                  <% } else if (Array.isArray(c.interesses)) { %>
+                    <%= c.interesses.join(', ') %>
                   <% } else { %>
                     -
                   <% } %>
